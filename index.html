@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mythic AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --background-color: #f8f7f5;
+      --surface-color: #ffffff;
+      --primary-accent: #c5a35a;
+      --primary-accent-hover: #d4b36a;
+      --text-primary: #333333;
+      --text-secondary: #888888;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --gold-gradient: linear-gradient(90deg, var(--primary-accent-hover), var(--primary-accent));
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      background-color: var(--background-color);
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    #app-container {
+      background: var(--surface-color);
+      border-radius: 24px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+      padding: 2.5rem;
+      max-width: 1200px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      transition: all 0.3s ease;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin: 0;
+      background: linear-gradient(90deg, #666, #000);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+    }
+    .controls, .image-display {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .image-container {
+      background-color: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1rem;
+      min-height: 350px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .image-container img {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+    .placeholder {
+      color: var(--text-secondary);
+      text-align: center;
+      font-size: 1rem;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .file-label {
+      background-color: transparent;
+      color: var(--primary-accent);
+      border: 1px solid var(--primary-accent);
+      padding: 12px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      text-align: center;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .file-label:hover {
+      background-color: var(--primary-accent);
+      color: #fff;
+    }
+    #prompt-input {
+      width: 100%;
+      padding: 12px;
+      background-color: #fff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      color: var(--text-primary);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    #prompt-input::placeholder {
+      color: var(--text-secondary);
+    }
+    #prompt-input:focus {
+      outline: none;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 0 3px rgba(197, 163, 90, 0.3);
+    }
+    #generate-button, #save-button {
+      background: var(--gold-gradient);
+      color: white;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    #generate-button:disabled {
+      background: #e0e0e0;
+      color: #999;
+      cursor: not-allowed;
+      transform: scale(1);
+      box-shadow: none;
+    }
+    #generate-button:not(:disabled):hover, #save-button:not(.hidden):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(197, 163, 90, 0.3);
+    }
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      border-top-color: #fff;
+      width: 18px;
+      height: 18px;
+      animation: spin 1s linear infinite;
+    }
+    .loader-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 16px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+    }
+    .loader-overlay .spinner {
+      width: 40px;
+      height: 40px;
+      border-width: 4px;
+      border-color: rgba(0, 0, 0, 0.1);
+      border-top-color: var(--primary-accent);
+    }
+    .hidden {
+      display: none;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      .image-container {
+        min-height: 300px;
+      }
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="app-container">
+    <h1>Mythic AI</h1>
+    <div class="main-content">
+      <div class="controls">
+        <div class="image-container" id="original-image-container">
+          <p class="placeholder">Upload an image to start</p>
+          <img id="original-image" class="hidden" alt="Original image" />
+        </div>
+        <label for="file-upload" class="file-label">Upload Image</label>
+        <input type="file" id="file-upload" accept="image/*" />
+        <input type="text" id="prompt-input" placeholder="Describe your edit (e.g., 'add a retro filter')" />
+        <button id="generate-button" disabled>
+            <span id="button-text">Generate</span>
+            <div id="button-spinner" class="spinner hidden"></div>
+        </button>
+      </div>
+      <div class="image-display">
+        <div class="image-container" id="edited-image-container">
+          <p class="placeholder">Your edited image will appear here</p>
+          <img id="edited-image" class="hidden" alt="Edited image" />
+          <div id="loader" class="loader-overlay hidden">
+              <div class="spinner"></div>
+          </div>
+        </div>
+        <button id="save-button" class="hidden">Save Image</button>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="index.tsx"></script>
+</body>
+</html>
